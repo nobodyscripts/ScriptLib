@@ -8,18 +8,6 @@
 
 ; ------------------- Functions -------------------
 
-; Custom clicking function, uses GameWindow def relative coords
-fSlowClickRelL(clickX, clickY, delay := 34) {
-    If (!Window.IsActive()) {
-        Out.I("No window found while trying to Lclick at " clickX " * " clickY
-            "`n Rel: " Window.RelW(clickX) " * " Window.RelH(clickY))
-        Return false
-    }
-    MouseClick("left", Window.RelW(clickX), Window.RelH(clickY), , , "D")
-    Sleep(delay)
-    MouseClick("left", Window.RelW(clickX), Window.RelH(clickY), , , "U")
-}
-
 ; Custom clicking function, uses given coords no relative correction
 fCustomClick(clickX, clickY, delay := 34) {
     If (!Window.IsActive()) {
@@ -172,4 +160,19 @@ ArrToCommaDelimStr(var) {
 
 CommaDelimStrToArr(var) {
     Return StrSplit(var, " ", ",.")
+}
+
+BinToStr(var) {
+    If (var) {
+        Return "true"
+    } Else {
+        Return "false"
+    }
+}
+
+IsBool(var) {
+    If (IsInteger(var) && (var = 0 || var = 1)) {
+        Return true
+    }
+    Return false
 }

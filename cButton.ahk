@@ -1,13 +1,14 @@
 #Requires AutoHotkey v2.0
 
 #Include cPoint.ahk
+#Include cGameWindow.ahk
+#Include cLogging.ahk
 
 /**
  * cButton Class, extends cPoint with button related colour checking
  * @module cButton
  * @property {String} Active Active button colour (excluding text)
  * @property {String} ActiveMouseOver Active button colour when mouse over
-
  * @property {String} Inactive Inactive button colour
  * @property {String} Background Background window main colour
  * @method IsButton 
@@ -17,6 +18,11 @@
  * @method IsColourMatch Matches on any colour property
  * @method IsBackground
  * @method ColourToUserString
+ * @method ClickButtonActive
+ * @method WaitUntilActiveButton
+ * @method WaitUntilActiveButtonS
+ * @method WaitUntilButton
+ * @method WaitUntilButtonS
  */
 Class cButton extends cPoint {
     /** 0xFFFFFF
@@ -45,7 +51,7 @@ Class cButton extends cPoint {
      * @param colour 
      * @returns {Integer} true/false
      */
-    IsButton(colour) {
+    IsButton() {
         colour := this.GetColour()
         If (colour = this.Active || colour = this.ActiveMouseOver ||
             colour = this.ActiveSelected || colour = this.Inactive ||
@@ -152,5 +158,97 @@ Class cButton extends cPoint {
         default: Return "Unknown colour: " col
         }
     }
-;@endregion
+    ;@endregion
+
+    ;@region ClickButtonActive()
+    /**
+     * Check if point is active button background then click with 1*1 offset
+     * @param {Integer} [xOffset] Amount to offset X when clicking to avoid 
+     * covering point
+     * @param {Integer} [yOffset] Amount to offset Y when clicking to avoid 
+     * covering point
+     * @param {Integer} [clickdelay=34] Delay for mouseclick
+     * @param {Integer} [sleepafter=Navigatetime] Period to sleep after clicking
+     * @returns {Boolean} Was button active and clicked
+     */
+    ClickButtonActive(xOffset := 1, yOffset := 1, clickdelay := 34,
+        sleepafter := 17) {
+        If (this.IsButtonActive()) {
+            this.ClickOffset(xOffset, yOffset, clickdelay)
+            Sleep(sleepafter)
+            Return true
+        }
+        Return false
+    }
+    ;@endregion
+
+    /**
+     * Loop until active button found or max loops reached
+     * @memberof cPoint
+     * @param {Integer} maxLoops 
+     * @param {Integer} interval Delay between loop passes
+     * @returns {Integer} True if colour matches, false if not
+     */
+    WaitUntilActiveButton(maxLoops := 20, interval := 50) {
+        debugtemp := ""
+        i := maxLoops
+        While (Window.IsActive() && !this.IsButtonActive()) {
+            Sleep(interval)
+            i--
+            If (this.toStringWColour() != debugtemp) {
+                debugtemp := this.toStringWColour()
+                ; Out.D(this.toStringWColour() " " this.IsButtonActive())
+            }
+            If (i <= 0) {
+                Break
+            }
+        }
+        ;Out.D("WaitUntilActiveButton: " this.toStringWColour())
+        Return this.IsButtonActive()
+    }
+
+    /**
+     * Loop until active button found or max loops reached
+     * @memberof cPoint
+     * @param {Integer} seconds Time period for loop
+     * @returns {Integer} True if colour matches, false if not
+     */
+    WaitUntilActiveButtonS(seconds := 10) {
+        Return this.WaitUntilActiveButton(seconds * 1000 / 20, 20)
+    }
+
+    /**
+     * Loop until button found or max loops reached
+     * @memberof cPoint
+     * @param {Integer} maxLoops 
+     * @param {Integer} interval Delay between loop passes
+     * @returns {Integer} True if colour matches, false if not
+     */
+    WaitUntilButton(maxLoops := 20, interval := 50) {
+        debugtemp := ""
+        i := maxLoops
+        While (Window.IsActive() && !this.IsButton()) {
+            Sleep(interval)
+            i--
+            If (this.toStringWColour() != debugtemp) {
+                debugtemp := this.toStringWColour()
+                Out.D(this.toStringWColour() " " this.IsButton())
+            }
+            If (i <= 0) {
+                Break
+            }
+        }
+        Out.D("WaitUntilButton: " this.toStringWColour())
+        Return this.IsButton()
+    }
+
+    /**
+     * Loop until button found or max loops reached
+     * @memberof cPoint
+     * @param {Integer} seconds Time period for loop
+     * @returns {Integer} True if colour matches, false if not
+     */
+    WaitUntilButtonS(seconds := 10) {
+        Return this.WaitUntilButton(seconds * 1000 / 20, 20)
+    }
 }

@@ -10,7 +10,7 @@ Global Debug := false
 
 /**
  * Defines the resolution independant locations for pixel checks.  
- * Convert positions from 2560*1369 client resolution to current resolution.
+ * Convert positions from default client resolution to current resolution.
  * Create with relative coords and relative on, or use fixed coords with it off
  * to handle scaling manually (for dynamic situations).  
  * cPoint(x, y, relative) to construct.
@@ -29,10 +29,15 @@ Global Debug := false
  * original values
  * 
  * @function Set Set new values after construction
+ * @function IsBackground Is point a background colour
+ * @function IsButton Is point a button colour
+ * @function IsButtonActive Is point an active button colour
+ * @function IsButtonInactive Is point an inactive button colour
+ * @function IsButtonOffPanel Is point an off panel button colour 
  * @function Click Click left mouse button at point
  * @function ClickOffset Click left mouse button at point with an offset
+ * @function ClickButtonActive Click left mouse button at point if active
  * @function MouseMove Move mouse to point
- * @function MouseMoveOffset Move mouse to point with offset
  * @function toString Convert x y to readable string
  * @function toStringWColour toSting with colour
  * @function toStringDisplay toString to 2 decimal places
@@ -61,16 +66,20 @@ Class cPoint {
     x {
         get {
             If (this.relative && Window.W != 0) {
-                Return this._x / 2560 * Window.W
+                Return this._x / Window.DefW * Window.W
             } Else {
                 If (Window.W = 0) {
-                    Out.I("ERR: Window.W not set")
+                    Out.E("Window.W not set")
                 }
                 Return this._x
             }
         }
         set {
             this._x := Value
+            if (Value > Window.DefW) {
+                Out.D("Value given to cPoint out of range for default value")
+                Out.Stack()
+            }
             Return this._x
         }
     }
@@ -84,16 +93,20 @@ Class cPoint {
     y {
         get {
             If (this.relative && Window.H != 0) {
-                Return this._y / 1369 * Window.H
+                Return this._y / Window.DefH * Window.H
             } Else {
                 If (Window.H = 0) {
-                    Out.I("ERR: Window.H not set")
+                    Out.E("Window.H not set")
                 }
                 Return this._y
             }
         }
         set {
             this._y := Value
+            if (Value > Window.DefH) {
+                Out.D("Value given to cPoint out of range for default value")
+                Out.Stack()
+            }
             Return this._y
         }
     }
@@ -105,7 +118,7 @@ Class cPoint {
     relative := true
 
     /**
-     * Create new point instance using 2560*1440 resolution resolution
+     * Create new point instance using def resolution resolution
      * maximised client coords
      * @constructor
      * @param x 
@@ -139,7 +152,7 @@ Class cPoint {
      */
     Click(clickdelay := 34) {
         If (!Window.IsActive()) {
-            Out.I("No window found while trying to click at " this.x " * " this
+            Out.E("No window found while trying to click at " this.x " * " this
                 .y)
             Return false
         }
@@ -155,7 +168,7 @@ Class cPoint {
      */
     ClickR(clickdelay := 34) {
         If (!Window.IsActive()) {
-            Out.I("No window found while trying to click at " this.x " * " this
+            Out.E("No window found while trying to click at " this.x " * " this
                 .y)
             Return false
         }
@@ -175,7 +188,7 @@ Class cPoint {
      */
     ClickOffset(xOffset := 1, yOffset := 1, clickdelay := 34) {
         If (!Window.IsActive()) {
-            Out.I("No window found while trying to click at " this.x + xOffset " * " this
+            Out.E("No window found while trying to click at " this.x + xOffset " * " this
                 .y + yOffset)
             Return false
         }
@@ -322,7 +335,7 @@ Class cPoint {
      * Clickoffset with loop that checks for specified colour, useful for 
      * clicking until something changes.
      * @memberof cPoint
-     * @param colour 
+     * @param {String} colour "0xFFFFFF"
      * @param {Integer} maxLoops Max number of loops permitted before exit
      * @param {Integer} offsetX 
      * @param {Integer} offsetY 
@@ -341,7 +354,46 @@ Class cPoint {
                 Return false
             }
         }
-        Out.D("ClickOffsetWhileColour: " this.toStringWColour())
+        ;Out.D("ClickOffsetWhileColour: " this.toStringWColour())
+        Return true
+    }
+    
+    /**
+     * Clickoffset with loop that checks for specified colour, useful for 
+     * clicking until something changes.
+     * @memberof cPoint
+     * @param {Array} colour "0xFFFFFF","0xFFFFFF"
+     * @param {Integer} maxLoops Max number of loops permitted before exit
+     * @param {Integer} offsetX 
+     * @param {Integer} offsetY 
+     * @param {Integer} delay Click delay
+     * @param {Integer} interval Delay between loop passes
+     * @returns {Bool} 
+     */
+    ClickOffsetWhileArrColour(colour, maxLoops := 20, offsetX := 1, offsetY := 1,
+        delay := 54, interval := 50) {
+        i := maxLoops
+        While (Window.IsActive() && _IsProvidedColour(colour)) {
+            this.ClickOffset(offsetX, offsetY, delay)
+            Sleep(interval)
+            i--
+            If (i = 0) {
+                Return false
+            }
+        }
+        ;Out.D("ClickOffsetWhileColour: " this.toStringWColour())
+
+        _IsProvidedColour(colour) {
+            j := 1
+            loop colour.Length {
+                if (this.IsColour(colour[j])) {
+                    return true
+                }
+                j++
+            }
+            return false
+        }
+
         Return true
     }
 
@@ -380,7 +432,7 @@ Class cPoint {
             Sleep(interval)
             i--
             If (i = 0) {
-                Out.D("ClickOffsetUntilColour: Hit max clicks " this.toStringWColour())
+                ;Out.D("ClickOffsetUntilColour: Hit max clicks " this.toStringWColour())
                 Return false
             }
         }
@@ -444,7 +496,7 @@ Class cPoint {
      */
     WaitWhileNotColour(colour, maxLoops := 20, interval := 50) {
         i := maxLoops
-        Out.D("WaitWhileNotColour: start " this.toStringWColour())
+        ;Out.D("WaitWhileNotColour: start " this.toStringWColour())
         While (Window.IsActive() && this.GetColour() != colour) {
             Sleep(interval)
             i--
@@ -466,6 +518,7 @@ Class cPoint {
     WaitWhileNotColourS(colour, seconds := 10) {
         Return this.WaitWhileNotColour(colour, seconds * 1000 / 20, 20)
     }
+
 
     /**
      * Converts current cPoint to screenspace and returns [x,y]

@@ -24,6 +24,16 @@ Global CheckForUpdatesLimiter := 24
  * @type {UpdateChecker} */
 Global Updater := UpdateChecker()
 
+/*
+
+https://api.github.com/repos/<username>/<repository_name>/releases
+https://api.github.com/repos/nobodyscripts/leafblowerscript/releases
+returns json, 0.tag_name = "v3.1.1", 0.url = web link for browser
+
+https://api.github.com/users/nobodyscripts/events/public
+
+*/
+
 Class ScriptVersion {
     Raw := ""
     Major := 0
@@ -38,7 +48,6 @@ Class ScriptVersion {
      * @param {string} var Json string of format 
      */
     SetByJson(var) {
-
         this.Raw := var["Version"]
         If (!var.Has("Major")) {
             split := StrSplit(var["Version"], ".", "vV") ; "3.1.2-Alpha"

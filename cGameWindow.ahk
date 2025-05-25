@@ -162,7 +162,7 @@ Class cGameWindow {
                 this.W := valW
                 this.H := valH
             } Catch As err {
-                Out.I("Window doesn't exist. Cannot get client position.")
+                Out.E("Window doesn't exist. Cannot get client position.")
                 Out.E(err)
                 Return false
             }
