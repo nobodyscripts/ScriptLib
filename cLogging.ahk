@@ -1,35 +1,5 @@
 #Requires AutoHotkey v2.0
 
-If (!IsSet(TimestampLogs)) {
-    Global TimestampLogs := true
-}
-
-If (!IsSet(ScriptsLogFile)) {
-    Global ScriptsLogFile := ""
-}
-
-If (!IsSet(EnableLogging)) {
-    Global EnableLogging := true
-}
-
-If (!IsSet(Debug)) {
-    Global Debug := true
-}
-
-If (!IsSet(Verbose)) {
-    Global Verbose := true
-}
-
-If (!IsSet(LogBuffer)) {
-    Global LogBuffer := true
-}
-
-/**
- * Using Out instead of Log as thats taken by a func
- * @type {cLog} Global cLog object
- */
-Global Out := cLog(ScriptsLogFile, TimestampLogs, 3, LogBuffer)
-
 /**
  * Log callstack for Deprecated functions that need removal to be located
  */
@@ -63,36 +33,34 @@ _OutputDebug(this, text) {
 /**
  * Used in cSettings.initSettings after load of settings
  */
-UpdateDebugLevel() {
-    Global EnableLogging, Debug, Verbose, LogBuffer, Out, TimestampLogs
+UpdateDebugLevel(EnableLogging, Debug, Verbose, LogBuffer, Out, TimestampLogs, DebugAll) {
     ; If buffer setting has changed, remake class so that handle can be created
     Out.SetBuffer(LogBuffer)
     Out.Timestamp := TimestampLogs
 
-    If (FileExist(A_ScriptDir "\IsNobody")) {
+    If (DebugAll) {
         Out.DebugLevel := 3
         Out.I("Set debug output to full.")
         Return
     }
-    If (Verbose) {
+    If (Debug) {
         Out.DebugLevel := 2
-        Out.I("Set debug output to verbose.")
+        Out.I("Set debug output to debug.")
         Return
     }
-    If (Debug) {
+    If (Verbose) {
         Out.DebugLevel := 1
-        Out.I("Set debug output to debug.")
+        Out.I("Set debug output to verbose.")
         Return
     }
     If (EnableLogging) {
         Out.DebugLevel := 0
         Out.I("Set debug output to important only.")
         Return
-    } Else {
-        Out.DebugLevel := -1
-        Out.I("Set debug output to none.")
-        Return
     }
+    Out.DebugLevel := -1
+    Out.I("Set debug output to none.")
+    Return
 }
 
 /**
@@ -176,9 +144,13 @@ Class cLog {
     }
 
     _OpenHandle() {
+        static bufferedLogToggle := false
         Try {
             this._FileHandle := FileOpen(this.FileName, "a-d")
-            ;this._OutputDebug("Logging to " this.FileName)
+            if (!bufferedLogToggle){
+                this._OutputDebug("Logging to " this.FileName)
+                bufferedLogToggle := true
+            }
         } Catch (Error) {
             MsgBox("Could not open " this.FileName " to write logs to.")
             this._OutputDebug("Could not open " this.FileName
@@ -187,7 +159,11 @@ Class cLog {
     }
 
     _CloseHandle() {
-        If (Type(this._FileHandle) = File) {
+        If (FileGetSize(this.FileName, "B") = 0 && this._FileHandle.Pos != 0) {
+            this._FileHandle.Close()
+            FileDelete(this.FileName)
+        }
+        If (Type(this._FileHandle) = "File") {
             this._FileHandle.Close()
         }
         this._FileHandle := false
@@ -347,7 +323,7 @@ Class cLog {
      * @param {string|error} out Output error message or error object
      */
     Error(out) {
-        If (InStr(Type(out), "Error") ) {
+        If (InStr(Type(out), "Error")) {
             ; Log the error, outputlog only posts outputdebug if logging is off
             ; if debuglevel is off msgbox it
             this._OutputLog("Error: " out.Message)
@@ -407,7 +383,7 @@ Class cLog {
      * @param {string} msg Output error message or error object
      */
     Debug(msg) {
-        If (this.DebugLevel > 0) {
+        If (this.DebugLevel > 1) {
             this._OutputLog("Debug: " msg)
         }
 
@@ -429,7 +405,7 @@ Class cLog {
      * @param {string} msg Output error message or error object
      */
     Verbose(msg) {
-        If (this.DebugLevel > 1) {
+        If (this.DebugLevel > 0) {
             this._OutputLog("Verbose: " msg)
         }
 
@@ -479,4 +455,11 @@ Class cLog {
             }
         }
     }
+}
+
+OnExit(ExitFunc)
+ExitFunc(ExitReason, ExitCode) {
+    Global Out
+    Out.I("Script exiting. Due to " ExitReason ".")
+    Out := false
 }
