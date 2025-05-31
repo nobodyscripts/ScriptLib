@@ -5,14 +5,14 @@
 
 ; ------------------- Settings -------------------
 ; Loads UserSettings.ini values for the rest of the script to use
-If (!IsSet(S)) {
-    Global S := cSettings()
-}
+/** @type {cSettings} */
+Global S := cSettings()
+
 /**
  * Single instance of a script setting object
  * @property Name Name of the setting and global var name
  * @property DefaultValue Default value for non developers
- * @property NobodyDefaultValue Default value for developer
+ * @property Value Value of the setting
  * @property DataType Internal custom datatype string {bool | int | array}
  * @property Category Ini file category heading
  * @method __new Constructor
@@ -56,7 +56,6 @@ Class singleSetting {
      * @constructor
      * @param iName Name of the setting and global var
      * @param {Integer} iDefaultValue Default value set in script
-     * @param {Integer} iNobodyDefaultValue Default value set for developer
      * @param {String} [iDataType="bool"] Internal custom datatype
      * @param {String} [iCategory="Default"] Ini file section heading name
      * @returns {singleSetting} Returns (this)
@@ -78,10 +77,10 @@ Class singleSetting {
      * @param {Any} value Defaults to getting value of the global variable
      * @returns {String | Integer | Any} 
      */
-    ValueToString(value := %this.Name%) {
+    ValueToIniString(value := this.Value) {
         Switch (StrLower(this.DataType)) {
         Case "bool":
-            Return BinaryToStr(value)
+            Return BinToStr(value)
         Case "array":
             Return ArrToCommaDelimStr(value)
         default:
@@ -90,21 +89,42 @@ Class singleSetting {
     }
     ;@endregion
 
+    /**
+     * Convert ini formatted string to value
+     * @param value 
+     */
+    ValueFromIniString(value) {
+        Switch (StrLower(this.DataType)) {
+        Case "bool":
+            Return StrToBin(value)
+        Case "array":
+            Return StrSplit(value, " ", ",.")
+        default:
+            Return value
+        }
+    }
+
+    SetFromIniString(value) {
+        this.Value := this.ValueFromIniString(value)
+    }
+
     ;@region SetCommaDelimStrToArr()
     /**
-     * Set global of this.Name to an array of value split by comma
-     * @param var Value comma seperated string to split into array
+     * Set value of this.Name to an array of value split by space (comma and period stripped)
+     * @param {String} var Value comma seperated string to split into array
+     * @returns {Array | Any} Returns resulting value
      */
     SetCommaDelimStrToArr(var) {
-        %this.Name% := StrSplit(var, " ", ",.")
+        this.Value := StrSplit(var, " ", ",.")
+        Return this.Value
     }
     ;@endregion
 }
 
 /**
  * cSettings - Stores settings data
- * @property sFilename Full file path to ini file for settings
- * @property sFileSection Ini section heading for settings
+ * @property Filename Full file path to ini file for settings
+ * @property Section Ini section heading for settings
  * @property Map Map to store singleSettings objects per global var name
  * @method initSettings Load Map with defaults, check if file, load if possible,
  * return loaded state
@@ -127,12 +147,12 @@ Class cSettings {
      * Full file path to ini file for settings
      * @type {String} 
      */
-    sFilename := A_ScriptDir "\UserSettings.ini"
+    Filename := A_ScriptDir "\UserSettings.ini"
     /**
      * Ini section heading for settings
      * @type {String}
      */
-    sFileSection := "Default"
+    Section := "Default"
     /**
      * Map to store singleSettings objects per global var name
      * @type {Map<string, singleSetting>}
@@ -140,17 +160,20 @@ Class cSettings {
     Map := Map()
     ;@endregion
 
-    __New() {
-        this.AddSetting("Default", "EnableLogging", false, "bool")
-        this.AddSetting("Default", "TimestampLogs", true, "bool")
+    __New(FileName := "") {
+        If (Filename != "") {
+            this.Filename := FileName
+        }
+        this.AddSetting("Logging", "EnableLogging", false, "bool")
+        this.AddSetting("Logging", "Verbose", false, "bool")
+        this.AddSetting("Logging", "Debug", false, "bool")
+        this.AddSetting("Logging", "DebugAll", false, "bool")
+        this.AddSetting("Logging", "TimestampLogs", true, "bool")
+        this.AddSetting("Logging", "LogBuffer", true, "bool")
 
         this.AddSetting("Updates", "CheckForUpdatesEnable", true, "bool")
         this.AddSetting("Updates", "CheckForUpdatesReleaseOnly", true, "bool")
         this.AddSetting("Updates", "CheckForUpdatesLastCheck", 0, "int")
-
-        this.AddSetting("Debug", "Debug", false, "bool")
-        this.AddSetting("Debug", "Verbose", false, "bool")
-        this.AddSetting("Debug", "LogBuffer", true, "bool")
     }
 
     ;@region AddSetting()
@@ -189,47 +212,44 @@ Class cSettings {
     }
     ;@endregion
 
+    ;@region SetDefault()
+    /**
+     * Set value to default by setting name
+     */
+    SetDefault(Name) {
+        Return this.Map[Name].Value := this.Map[Name].DefaultValue
+    }
+    ;@endregion
+
     ;@region initSettings()
     /**
      * Load Map with defaults, check if file, load if possible, return loaded 
      * state
-     * @param {Integer} secondary Is script the main script or a spammer (for 
-     * paths)
      * @returns {Boolean} 
      */
-    initSettings(secondary := false) {
+    initSettings() {
         Global Debug
-
         ;@region Settings map initialization
 
         ;@endregion
-
-        If (!secondary) {
-            If (FileExist(A_ScriptDir "\IsNobody")) {
-                Debug := true
-                Out.I("Settings: Nobody mode, forced debug")
-            }
-            If (!FileExist(this.sFilename)) {
-                Out.I("No UserSettings.ini found, writing default file.")
-                this.WriteDefaults()
-            }
-            If (this.loadSettings()) {
-                UpdateDebugLevel()
-                Out.I("Loaded settings.")
-            } Else {
-                Return false
-            }
-            Return true
-        } Else {
-            this.sFilename := A_ScriptDir "\..\UserSettings.ini"
-            If (this.loadSettings()) {
-                UpdateDebugLevel()
-                Out.I("Loaded settings.")
-            } Else {
-                Return false
-            }
-            Return true
+        If (!FileExist(this.Filename)) {
+            Out.I("No UserSettings.ini found, writing default file.")
+            this.WriteDefaults()
         }
+        If (this.loadSettings()) {
+            Debug := this.Get("Debug")
+            Out.UpdateSettings(
+                this.Get("EnableLogging"),
+                this.Get("Verbose"),
+                this.Get("Debug"),
+                this.Get("DebugAll"),
+                this.Get("LogBuffer"),
+                this.Get("TimestampLogs"))
+            Out.I("Loaded settings.")
+        } Else {
+            Return false
+        }
+        Return true
     }
     ;@endregion
 
@@ -244,21 +264,12 @@ Class cSettings {
         Global Debug := false
         ;@endregion
 
-        this.UpdateSettings()
         For (setting in this.Map) {
             Try {
-                If (StrLower(this.Map[setting].DataType) != "array") {
-                    value := this.IniToVar(this.Map[setting].Name,
-                        this.Map[setting].Category)
-                    this.Set(this.Map[setting].Name, value)
-
-                } Else {
-                    ; special handling for array datatypes
-                    value := CommaDelimStrToArr(this.IniToVar(this.Map[setting].Name,
-                        this.Map[setting].Category))
-                    this.Set(this.Map[setting].Name, value)
-                }
+                this.IniToMap(this.Map[setting].Name,
+                    this.Map[setting].Category)
             } Catch As exc {
+                Out.E(exc)
                 If (exc.Extra) {
                     Out.E("LoadSettings failed - " exc.Message "`n" exc
                         .Extra)
@@ -266,24 +277,13 @@ Class cSettings {
                     Out.E("LoadSettings failed - " exc.Message)
                 }
                 MsgBox("Could not load all settings, making new default " .
-                    this.sFilename)
-                Out.I("Attempting to write a new default " this.sFilename ".")
+                    this.Filename)
+                Out.I("Attempting to write a new default " this.Filename ".")
                 this.WriteDefaults()
                 Return false
             }
         }
         Return true
-    }
-    ;@endregion
-
-    ;@region UpdateSettings()
-    /**
-     * Adds missing settings using defaults if some settings don't exist
-     */
-    UpdateSettings() {
-        For (setting in this.Map) {
-            this.WriteToIni(this.Map[setting].Name)
-        }
     }
     ;@endregion
 
@@ -293,8 +293,9 @@ Class cSettings {
      */
     WriteDefaults() {
         For (setting in this.Map) {
-            this.Set(setting, this.Map[setting].DefaultValue)
+            this.SetDefault(this.Map[setting].Name)
             this.WriteToIni(this.Map[setting].Name)
+            ;Out.D("Set " this.Map[setting].Name " to default")
         }
     }
     ;@endregion
@@ -306,6 +307,7 @@ Class cSettings {
     SaveCurrentSettings() {
         For (setting in this.Map) {
             this.WriteToIni(this.Map[setting].Name)
+            ;Out.D("Written " this.Map[setting].Name)
         }
     }
     ;@endregion
@@ -318,20 +320,43 @@ Class cSettings {
      * @param {String} [section="Default"] 
      */
     WriteToIni(Name) {
-        value := this.Map[Name].ValueToString(),
-        fn := this.sFilename,
+        value := this.Map[Name].ValueToIniString(),
+        fn := this.Filename,
         cat := this.Map[Name].Category
+        ;Out.D(Name " currently " value)
         Try {
             storedVal := IniRead(fn, cat, Name)
-        } Catch Error {
+        } Catch {
         }
         If (!IsSet(storedVal)) {
-            IniWrite(value, this.sFilename, cat, Name)
+            IniWrite(value, this.Filename, cat, Name)
             Return
         }
+        ;Out.D("Stored " storedVal " vs " value)
         If (storedVal != value) {
-            IniWrite(value, this.sFilename, cat, Name)
+            IniWrite(value, this.Filename, cat, Name)
         }
+    }
+    ;@endregion
+
+    ;@region ReadFromIni()
+    /**
+     * Description
+     */
+    ReadFromIni(file, section, name) {
+        value := this.Map[Name].ValueToIniString(),
+        fn := this.Filename,
+        cat := this.Map[Name].Category
+        ;Out.D(Name " currently " value)
+        Try {
+            storedVal := IniRead(fn, cat, Name)
+        } Catch {
+        }
+        If (!IsSet(storedVal)) {
+            IniWrite(value, this.Filename, cat, Name)
+            Return value
+        }
+        Return storedVal
     }
     ;@endregion
 
@@ -344,16 +369,31 @@ Class cSettings {
      * @param {String} file 
      * @returns {Integer | String} 
      */
-    IniToVar(name, section := this.sFileSection, file := this.sFilename) {
-        var := IniRead(file, section, name)
-        Switch var {
-        Case "true":
-            Return true
-        Case "false":
-            Return false
-        default:
-            Return var
-        }
+    IniToVar(name, section := this.Section, file := this.Filename) {
+        value := this.Map[name].ValueFromIniString(this.ReadFromIni(file, section, name))
+        ;Out.D(name " has been loaded fetched as " value)
+        Return value
+    }
+    ;@endregion
+
+    ;@region IniToMap()
+    /**
+     * Reads ini value for (name) in (section) from (file) and returns as 
+     * string or Boolean
+     * @param name 
+     * @param {String} section 
+     * @param {String} file 
+     * @returns {Integer | String} 
+     */
+    IniToMap(name, section := this.Section, file := this.Filename) {
+        this.Map[name].SetFromIniString(this.ReadFromIni(file, section, name))
+        /* If (this.Map[name].DataType != "Array") {
+            Out.D(name " has been loaded into map as " this.Get(name))
+        } Else {
+            text := name " has been loaded into map as array "
+            text .= this.Map[name].ValueToIniString()
+            Out.D(text)
+        } */
     }
     ;@endregion
 }

@@ -1,0 +1,38 @@
+{
+	"folders": [
+		{
+			"name": "ScriptLib",
+			"path": "."
+		}
+	],
+	"settings": {
+		"editor.rulers": [
+			80,
+			120
+		],
+		"workbench.settings.openDefaultSettings": false
+	},
+	"launch": {
+		"version": "0.2.0",
+		"configurations": [
+			{
+				"name": "ScriptLib Test Debug",
+				"type": "autohotkey",
+				"request": "launch",
+				"program": "${workspaceFolder}/Test.ahk",
+				"args": [
+					"/ErrorStdOut=UTF-8"
+				],
+				"variableCategories": "recommend",
+				"usePerfTips": {
+					"fontColor": "red",
+					"format": "{{elapsedTime_ms}} ms {{hitCount}} hit"
+				},
+				"useDebugDirective": false,
+				"useAutoJumpToError": true,
+				"stopOnEntry": false
+			}
+		],
+		"compounds": []
+	}
+}

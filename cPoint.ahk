@@ -3,12 +3,6 @@
 #Include cGameWindow.ahk
 
 /**
- * Debug flag for DebugLog
- * @type {Bool}
- */
-Global Debug := false
-
-/**
  * Defines the resolution independant locations for pixel checks.  
  * Convert positions from default client resolution to current resolution.
  * Create with relative coords and relative on, or use fixed coords with it off
@@ -76,7 +70,7 @@ Class cPoint {
         }
         set {
             this._x := Value
-            if (Value > Window.DefW) {
+            If (Value > Window.DefW) {
                 Out.D("Value given to cPoint out of range for default value")
                 Out.Stack()
             }
@@ -103,7 +97,7 @@ Class cPoint {
         }
         set {
             this._y := Value
-            if (Value > Window.DefH) {
+            If (Value > Window.DefH) {
                 Out.D("Value given to cPoint out of range for default value")
                 Out.Stack()
             }
@@ -357,7 +351,7 @@ Class cPoint {
         ;Out.D("ClickOffsetWhileColour: " this.toStringWColour())
         Return true
     }
-    
+
     /**
      * Clickoffset with loop that checks for specified colour, useful for 
      * clicking until something changes.
@@ -385,13 +379,13 @@ Class cPoint {
 
         _IsProvidedColour(colour) {
             j := 1
-            loop colour.Length {
-                if (this.IsColour(colour[j])) {
-                    return true
+            Loop colour.Length {
+                If (this.IsColour(colour[j])) {
+                    Return true
                 }
                 j++
             }
-            return false
+            Return false
         }
 
         Return true
@@ -518,7 +512,6 @@ Class cPoint {
     WaitWhileNotColourS(colour, seconds := 10) {
         Return this.WaitWhileNotColour(colour, seconds * 1000 / 20, 20)
     }
-
 
     /**
      * Converts current cPoint to screenspace and returns [x,y]

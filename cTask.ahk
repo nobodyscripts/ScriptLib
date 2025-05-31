@@ -122,7 +122,7 @@ Class cTask {
         this.PreTask()
         ; Break if provided check, timer or manual stop change
         While (this.StopWhen() && this._isLooping && this.WithinRunFor() &&
-            Window.IsActive()) {
+        Window.IsActive()) {
             If (!this.Task()) {
                 Break
             }

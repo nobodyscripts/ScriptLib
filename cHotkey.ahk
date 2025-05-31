@@ -19,13 +19,13 @@ GetKeyboardLayout() {
  */
 ConvertLayoutToCode(KeyboardLayout) {
     Switch KeyboardLayout {
-        Case "0x4090409": ; American
-            Return "EN-US"
-        Case "0x8090809": ; UK
-            Return "EN-GB"
-        default:
-            Out.I("New keyboard layout needs adding: " KeyboardLayout)
-            Return "EN-GB"
+    Case "0x4090409": ; American
+        Return "EN-US"
+    Case "0x8090809": ; UK
+        Return "EN-GB"
+    default:
+        Out.I("New keyboard layout needs adding: " KeyboardLayout)
+        Return "EN-GB"
     }
 }
 
@@ -74,7 +74,7 @@ Class cHotkey {
      * @returns {cHotkey} 
      */
     Create(iName, iValue, iCategory := "Default") {
-        Deprecated()
+        Out.Deprecated()
         this.Name := iName
         this.Defaults := iValue
         this.Value := this.GetDefaultValue()
@@ -92,18 +92,18 @@ Class cHotkey {
      */
     SetValue(value, type := 0) {
         Switch type {
-            Case 1:
-                this.Value := GetKeyName(value)
-                this.ValueVK := value
-                this.ValueSC := GetKeySC(value)
-            Case 2:
-                this.Value := GetKeyName(value)
-                this.ValueVK := GetKeyVK(value)
-                this.ValueSC := value
-            default:
-                this.Value := value
-                this.ValueVK := GetKeyVK(value)
-                this.ValueSC := GetKeySC(value)
+        Case 1:
+            this.Value := GetKeyName(value)
+            this.ValueVK := value
+            this.ValueSC := GetKeySC(value)
+        Case 2:
+            this.Value := GetKeyName(value)
+            this.ValueVK := GetKeyVK(value)
+            this.ValueSC := value
+        default:
+            this.Value := value
+            this.ValueVK := GetKeyVK(value)
+            this.ValueSC := GetKeySC(value)
         }
     }
 

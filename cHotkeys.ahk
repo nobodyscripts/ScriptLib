@@ -51,8 +51,7 @@ Class cHotkeys {
                 If (loaded) {
                     this.Hotkeys[Key].SetValue(loaded)
                 } Else {
-                    this.Hotkeys[Key].SetValue(this.Hotkeys[Key].GetDefaultValue()
-                    )
+                    this.Hotkeys[Key].SetValue(this.Hotkeys[Key].GetDefaultValue())
                 }
             } Catch As exc {
                 If (exc.Extra) {
@@ -100,12 +99,12 @@ Class cHotkeys {
 
     WriteToIni(key, value, section := this.sFileSection) {
         Switch value {
-            Case "0":
-            Case "-1":
-            Case "":
-                IniWrite("-1", this.sFilename, section, key)
-            default:
-                IniWrite(value, this.sFilename, section, key)
+        Case "0":
+        Case "-1":
+        Case "":
+            IniWrite("-1", this.sFilename, section, key)
+        default:
+            IniWrite(value, this.sFilename, section, key)
         }
     }
 
@@ -114,7 +113,7 @@ Class cHotkeys {
 
         For (Key in this.Hotkeys) {
             this.WriteToIni(this.Hotkeys[Key].Name, this.Hotkeys[Key].GetDefaultValue(),
-                this.Hotkeys[Key].Category)
+            this.Hotkeys[Key].Category)
 
         }
     }
@@ -139,14 +138,14 @@ Class cHotkeys {
     IniToHotkey(file, section, name) {
         var := IniRead(file, section, name)
         Switch var {
-            Case "0":
-                Return false
-            Case "":
-                Return false
-            Case "-1":
-                Return false
-            default:
-                Return var
+        Case "0":
+            Return false
+        Case "":
+            Return false
+        Case "-1":
+            Return false
+        default:
+            Return var
         }
     }
 }

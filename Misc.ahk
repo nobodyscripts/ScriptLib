@@ -129,13 +129,6 @@ ReloadIfNoGame() {
     }
 }
 
-BinaryToStr(var) {
-    If (var) {
-        Return "true"
-    }
-    Return "false"
-}
-
 ArrToCommaDelimStr(var) {
     output := ""
     If (Type(var) = "String") {
@@ -158,16 +151,21 @@ ArrToCommaDelimStr(var) {
     }
 }
 
-CommaDelimStrToArr(var) {
-    Return StrSplit(var, " ", ",.")
-}
-
 BinToStr(var) {
     If (var) {
         Return "true"
-    } Else {
-        Return "false"
     }
+    Return "false"
+}
+
+StrToBin(var) {
+    If (var = "false") {
+        Return false
+    }
+    If (var = "true") {
+        Return true
+    }
+    Throw ValueError("Unknown value fed to Boolean setting")
 }
 
 IsBool(var) {

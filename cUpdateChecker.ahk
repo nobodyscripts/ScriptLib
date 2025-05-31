@@ -168,12 +168,12 @@ Class UpdateChecker {
         Global CheckForUpdatesEnable, CheckForUpdatesReleaseOnly,
             CheckForUpdatesLastCheck, CheckForUpdatesInterval
         /** @type {cSettings} */
-        Global settings
+        Global S
 
-        If (!settings) {
-            settings := cSettings()
+        If (!S) {
+            S := cSettings()
 
-            If (!settings.initSettings()) {
+            If (!S.initSettings()) {
                 Return false
             }
         }
@@ -268,8 +268,8 @@ Class UpdateChecker {
     }
 
     SaveCheckTime() {
-        Global settings
-        settings.SaveCurrentSettings()
+        Global S
+        S.SaveCurrentSettings()
     }
 
     UpdateScriptToNewDev(*) {

@@ -1,80 +1,28 @@
 #Requires AutoHotkey v2.0
 
-/**
- * Log callstack for Deprecated functions that need removal to be located
- */
-Deprecated() {
-    Out.Error("Deprecated function called.")
-    Out.Stack()
-}
-
-/*
-DefProp := {}.DefineProp
-
-DefProp(Error.Base, "toString", {get: ErrorToString })
-DefProp(OSError.Base, "toString", {get: ErrorToString })
-
-ErrorToString(err) {
-    return err.Message " " err.Extra
-} */
-
-/**
- * Modify OutputDebug to add a newline by default
- */
-/* OutputDebug.DefineProp("Call", {
-    Call: _OutputDebug
-})
-
-_OutputDebug(this, text) {
-    text := text "`r`n"
-    (Func.Prototype.Call)(this, text)
-} */
-
-/**
- * Used in cSettings.initSettings after load of settings
- */
-UpdateDebugLevel(EnableLogging, Debug, Verbose, LogBuffer, Out, TimestampLogs, DebugAll) {
-    ; If buffer setting has changed, remake class so that handle can be created
-    Out.SetBuffer(LogBuffer)
-    Out.Timestamp := TimestampLogs
-
-    If (DebugAll) {
-        Out.DebugLevel := 3
-        Out.I("Set debug output to full.")
-        Return
-    }
-    If (Debug) {
-        Out.DebugLevel := 2
-        Out.I("Set debug output to debug.")
-        Return
-    }
-    If (Verbose) {
-        Out.DebugLevel := 1
-        Out.I("Set debug output to verbose.")
-        Return
-    }
-    If (EnableLogging) {
-        Out.DebugLevel := 0
-        Out.I("Set debug output to important only.")
-        Return
-    }
-    Out.DebugLevel := -1
-    Out.I("Set debug output to none.")
-    Return
-}
+Global Out
 
 /**
  * Log class to handle file open buffer and logging
+ * Recommend use as global var 'Out' for on exit logging
  * @module cLog
  * Constructor(FileName := "", Timestamp := true, DebugLevel := 0, UseBuffer := true)
  * @param {String} [FileName] Sets this.FileName, defaults to scriptname.Log
- * @param {Integer} [Timestamp=true] Sets if timestamps should be used
+ * @param {Boolean} [Timestamp=true] Sets if timestamps should be used
  * @param {Integer} [DebugLevel=0] Int to select the debug output level for logging
+ * 
  * -1 disabled (Msgboxs errors on failure)
+ * 
  * 0 Important
+ * 
  * 1 Important and Verbose
+ * 
  * 2 Important, Debug and Verbose
+ * 
  * 3 Important, Debug, Verbose and Stack tracing
+ * 
+ * @param {Boolean} [UseBuffer=false] Set if buffed periodic logging should be used
+ * for reduced disk writes
  * 
  * @property FileName Filename to log to
  * @property DebugLevel See above
@@ -89,6 +37,7 @@ UpdateDebugLevel(EnableLogging, Debug, Verbose, LogBuffer, Out, TimestampLogs, D
  * @method V Log a verbose/spammy message (string)
  * @method Stack Log a stack trace
  * @method S Log a stack trace
+ * @example Global Out := cLog(A_ScriptDir "\Filename.log", true, 3, true)
  */
 Class cLog {
     /** @type {File} Open file handle for logging object */
@@ -114,14 +63,23 @@ Class cLog {
      * Constructor for logging object, opens file handle when created
      * @param {String} [FileName] Sets this.FileName, defaults to scriptname.Log
      * @param {Integer} [Timestamp=true] Sets if timestamps should be used
-     * @param {Integer} [DebugLevel=0] Int to select the debug output level for logging
+     * @param {Integer} [DebugLevel=0] Int to select the debug output level for 
+     * logging
+     * 
      * -1 disabled (Msgboxs errors on failure)
+     * 
      * 0 Important
+     * 
      * 1 Important and Verbose
+     * 
      * 2 Important, Debug and Verbose
+     * 
      * 3 Important, Debug, Verbose and Stack tracing
+     * 
+     * @param {Boolean} [UseBuffer=false] Set if buffed periodic logging should be 
+     * used for reduced disk writes
      */
-    __New(FileName := "", Timestamp := true, DebugLevel := 0, UseBuffer := true
+    __New(FileName := "", Timestamp := true, DebugLevel := 0, UseBuffer := false
     ) {
         If (FileName = "") {
             this.FileName := A_ScriptDir "\" StrReplace(A_ScriptName, ".ahk",
@@ -140,15 +98,23 @@ Class cLog {
     }
 
     __Delete() {
-        this._CloseHandle()
+        ;this._CloseHandle()
     }
 
     _OpenHandle() {
         Static bufferedLogToggle := false
         Try {
+            If (this.FileName = "") {
+                OutputDebug("Filename was blank when opening")
+                Throw Error("Could not open a file to log to as non provided")
+            }
             this._FileHandle := FileOpen(this.FileName, "a-d")
+            If (!FileExist(this.FileName)) {
+                this._OutputDebug(this._FileHandle.Handle)
+                Throw Error("File didn't exist after fileopen")
+            }
             If (!bufferedLogToggle) {
-                this._OutputDebug("Logging to " this.FileName)
+                this._OutputDebug("-------`r`nLogging to " this.FileName)
                 bufferedLogToggle := true
             }
         } Catch (Error) {
@@ -159,9 +125,15 @@ Class cLog {
     }
 
     _CloseHandle() {
+        If (!FileExist(this.FileName)) {
+            this._FileHandle := false
+            Return
+        }
         If (FileGetSize(this.FileName, "B") = 0 && this._FileHandle.Pos != 0) {
             this._FileHandle.Close()
             FileDelete(this.FileName)
+            this._FileHandle := false
+            Return
         }
         If (Type(this._FileHandle) = "File") {
             this._FileHandle.Close()
@@ -174,19 +146,23 @@ Class cLog {
      * Write file, close and reopen handle
      */
     _FlushFile() {
-        If (this._FileLock) {
-            WaitTime := A_TickCount
-            While (this._FileLock && (A_TickCount - WaitTime) < 200) {
-                Sleep(1)
+        Try {
+            If (this._FileLock) {
+                WaitTime := A_TickCount
+                While (this._FileLock && (A_TickCount - WaitTime) < 200) {
+                    Sleep(1)
+                }
             }
+            this._FileLock := true
+            Sleep(3)
+            this._CloseHandle()
+            Sleep(10)
+            this._OpenHandle()
+            Sleep(3)
+            this._FileLock := false
+        } Catch Error As err {
+            this._OutputDebug(err.Message)
         }
-        this._FileLock := true
-        Sleep(3)
-        this._CloseHandle()
-        Sleep(10)
-        this._OpenHandle()
-        Sleep(3)
-        this._FileLock := false
     }
     ;@endregion
 
@@ -198,11 +174,9 @@ Class cLog {
         this._Buffer := LogBuffer
         If (LogBuffer) {
             this._OpenHandle()
-            this.I("Log set to buffer mode")
         } Else {
             this._CloseHandle()
             Sleep(15)
-            this.I("Log set to instant mode")
         }
     }
     ;@endregion
@@ -222,10 +196,14 @@ Class cLog {
      * Output message to log of whatever debug level requires output
      */
     _OutputLog(logmessage) {
-        If (this._Buffer) {
-            this._OutputLogBuffered(logmessage)
-        } Else {
-            this._OutputLogWrite(logmessage)
+        Try {
+            If (this._Buffer) {
+                this._OutputLogBuffered(logmessage)
+            } Else {
+                this._OutputLogWrite(logmessage)
+            }
+        } Catch Error As err {
+            this._OutputDebug(err.Message)
         }
     }
     ;@endregion
@@ -237,8 +215,8 @@ Class cLog {
     _OutputLogBuffered(logmessage) {
         Static LastFlush := 0
         If (LastFlush > 4) {
-            this._FlushFile()
             LastFlush := 0
+            this._FlushFile()
         }
         LastFlush++
         If (this.Timestamp) {
@@ -444,6 +422,7 @@ Class cLog {
     ;@endregion
     ;@endregion
 
+    ;@region LoopWrite()
     LoopWrite(msg) {
         written := false
         While (!written) {
@@ -459,11 +438,58 @@ Class cLog {
             }
         }
     }
+    ;@endregion
+
+    ;@region UpdateSettings()
+    /**
+     * Used in to update logging settings after load
+     */
+    UpdateSettings(EnableLogging, Verbose, Debug, DebugAll, LogBuffer, TimestampLogs) {
+        ; If buffer setting has changed, remake class so that handle can be created
+        this.SetBuffer(LogBuffer)
+        this.Timestamp := TimestampLogs
+
+        If (DebugAll) {
+            this.DebugLevel := 3
+            this.I("Set debug output to full.")
+            Return
+        }
+        If (Debug) {
+            this.DebugLevel := 2
+            this.I("Set debug output to debug.")
+            Return
+        }
+        If (Verbose) {
+            this.DebugLevel := 1
+            this.I("Set debug output to verbose.")
+            Return
+        }
+        If (EnableLogging) {
+            this.DebugLevel := 0
+            this.I("Set debug output to important only.")
+            Return
+        }
+        this.DebugLevel := -1
+        this.I("Set debug output to none.")
+        Return
+    }
+    ;@endregion
+
+    ;@region Deprecated()
+    /**
+     * Log callstack for Deprecated functions that need removal to be located
+     */
+    Deprecated() {
+        this.Error("Deprecated function called.")
+        this.Stack()
+    }
+    ;@endregion
 }
 
 OnExit(ExitFunc)
 ExitFunc(ExitReason, ExitCode) {
     Global Out
-    Out.I("Script exiting. Due to " ExitReason ".")
-    Out := false
+    If (IsSet(Out) && Type(Out) = "cLog") {
+        Out.I("Script exiting. Due to " ExitReason ".")
+    }
 }

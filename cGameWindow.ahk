@@ -6,7 +6,7 @@
  * Game window class global
  * @type {cGameWindow} 
  */
-Global Window := cGameWindow()
+Global Window
 
 /**
  * Game Window management class resolution independant
@@ -24,6 +24,7 @@ Global Window := cGameWindow()
  * @method IsActive Check if window active focus
  * @method Exist Check if window exists
  * @method ActiveOrReload Swap to window or reset script
+ * @example cGameWindow("Notepad ahk_class Notepad ahk_exe Notepad.exe", 2560, 1369)
  */
 Class cGameWindow {
     ;@region Properties
@@ -54,7 +55,7 @@ Class cGameWindow {
      * @param {String} Title AHK formatted window selection string
      * @param {Integer} DefW Client area width that cPoints and cRect were sampled at
      * @param {Integer} DefH Client area height that cPoints and cRect were sampled at
-     * @example cGameWindow("Leaf Blower Revolution ahk_class YYGameMakerYY ahk_exe game.exe", 2560, 1369)
+     * @example cGameWindow("Notepad ahk_class Notepad ahk_exe Notepad.exe", 2560, 1369)
      */
     __New(Title := "", DefW := 0, DefH := 0) {
         If (Title != "") {

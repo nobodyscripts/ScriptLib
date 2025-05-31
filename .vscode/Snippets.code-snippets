@@ -41,7 +41,7 @@
 			" * @method Name Desc",
 			" */",
 			"Class $1 {",
-			"\t/** @type {Type} Desc */",
+			"\t/** @type {Type} */",
 			"\tproperty := 0",
 			"",
 			"\t;@region ${3:Funcname}()",
@@ -66,16 +66,6 @@
 		],
 		"description": "Foldable region"
 	},
-	"TypeComment": {
-		"scope": "ahk2",
-		"prefix": "TypeComment",
-		"body": [
-			"/** @type {${1:Type}} ${2:Name} ${3:Description} */",
-			"$TM_SELECTED_TEXT$0",
-			""
-		],
-		"description": "Foldable region"
-	},
 	"GetColour": {
 		"scope": "ahk2",
 		"prefix": "getcolour",
@@ -84,27 +74,12 @@
 		],
 		"description": "Get colour from point"
 	},
-	"cPoint": {
+	"Property": {
 		"scope": "ahk2",
-		"prefix": "cPoint",
+		"prefix": "property",
 		"body": [
-			"cPoint($1, $2)$0"
-		],
-		"description": "cPoint template"
-	},
-	"cRect": {
-		"scope": "ahk2",
-		"prefix": "cRect",
-		"body": [
-			"cRect($1, $2, $3, $4)$0"
-		],
-		"description": "cRect template"
-	},
-	"CommentedVar": {
-		"scope": "ahk2",
-		"prefix": "var",
-		"body": [
-			"/** @type {${1:type}} ${2:description} */",
+			"/** ${2:description}",
+			"* @type {${1:type}} */",
 			"${3:varname} := ${4:value}",
 		],
 		"description": "Commented property"
