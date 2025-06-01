@@ -89,10 +89,23 @@ Class cGui extends GUI {
     ShowGUIPosition() {
         SplitTitle := StrSplit(this.Title, " ")
         Title := this.Title
+        If (IsInteger(SplitTitle[SplitTitle.Length])) {
+            SplitTitle[SplitTitle.Length].Delete()
+            For , value in SplitTitle {
+                Title .= value " "
+            }
+            Title := Trim(Title)
+        }
         Try {
+            S.AddSetting("GUIPosition", Title, "0,0", "string")
             arr := S.IniToVar(Title, "GUIPosition")
         } Catch Error As OutputVar {
             If (OutputVar.Message = "The requested key, section or file was not found.") {
+                Out.I("No window position stored for " Title)
+                this.Show()
+                Return
+            }
+            If (OutputVar.Message = "Item has no value.") {
                 Out.I("No window position stored for " Title)
                 this.Show()
                 Return
@@ -146,8 +159,7 @@ Class cGui extends GUI {
     ;@region StorePos()
     StorePos(resize := false) {
         Static StorePosLock := false
-
-        If (Type(this) = "Gui" && !StorePosLock) {
+        If ((Type(this) = "Gui" || Type(this) = "cGui") && !StorePosLock) {
             StorePosLock := true
             WinGetPos(&guiX, &guiY, &guiW, &guiH, this.Title)
             Sleep(500)
@@ -156,10 +168,16 @@ Class cGui extends GUI {
             }
             SplitTitle := StrSplit(this.Title, " ")
             Title := this.Title
-            If (SplitTitle[1] = "LBR") {
-                Title := SplitTitle[1] " " SplitTitle[2]
+            If (IsInteger(SplitTitle[SplitTitle.Length])) {
+                SplitTitle[SplitTitle.Length].Delete()
+                for , value in SplitTitle {
+                    Title .= value " "
+                }
+                Title := Trim(Title)
             }
-            S.WriteToIni(Title, guiX "," guiY, "GUIPosition")
+            S.AddSetting("GUIPosition", Title, "0,0", "string")
+            S.Set(Title, guiX "," guiY)
+            S.SaveCurrentSettings()
             StorePosLock := false
         }
     }
