@@ -144,7 +144,6 @@ Class cGui extends GUI {
 
     ;@region SaveGUIPositionOnMove()
     SaveGUIPositionOnMove(Wparam, Lparam, Msg, Hwnd) {
-        ;Out.D("onmessage " Wparam " " Lparam " " Msg " " Hwnd)
         ;thisGUI := GuiFromHwnd(Hwnd)
         SetTimer(this.StorePos.Bind(this), -500)
     }
@@ -170,7 +169,7 @@ Class cGui extends GUI {
             Title := this.Title
             If (IsInteger(SplitTitle[SplitTitle.Length])) {
                 SplitTitle[SplitTitle.Length].Delete()
-                for , value in SplitTitle {
+                For , value in SplitTitle {
                     Title .= value " "
                 }
                 Title := Trim(Title)
