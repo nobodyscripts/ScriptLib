@@ -3,11 +3,31 @@
 #Include cLogging.ahk
 #Include cSettings.ahk
 
+S.AddSetting("GUI", "GuiBGColour", "0c0018", "string")
+S.AddSetting("GUI", "GuiFontBold", false, "bool")
+S.AddSetting("GUI", "GuiFontColour", "cfcfcf", "string")
+S.AddSetting("GUI", "GuiFontItalic", false, "bool")
+S.AddSetting("GUI", "GuiFontName", "", "string")
+S.AddSetting("GUI", "GuiFontSize", 9, "int")
+S.AddSetting("GUI", "GuiFontStrike", false, "bool")
+S.AddSetting("GUI", "GuiFontUnderline", false, "bool")
+S.AddSetting("GUI", "GuiFontWeight", 4, "int")
+
 /**
  * cGui extends GUI Description
  * @module cGui extends GUI
- * @property {Type} property Desc
- * @method Name Desc
+ * @method ResetSettings
+ * @method ResetLogs
+ * @method ShowGUIPosition
+ * @method SaveGUIPositionOnMove
+ * @method SaveGUIPositionOnResize
+ * @method StorePos
+ * @method SetFontOptions
+ * @method MakeGUIResizableIfOversize
+ * @method OnWheel
+ * @method OnScroll
+ * @method OnResize
+ * @method UpdateScrollBars
  */
 Class cGui extends GUI {
 
@@ -179,6 +199,24 @@ Class cGui extends GUI {
         If (bgcol) {
             this.BackColor := bgcol
         }
+    }
+    ;@endregion
+
+    ;@region SetUserFontSettings()
+    /**
+     * Set default font and gui settings based on saved settings
+     */
+    SetUserFontSettings() {
+        bold := S.Get("GuiFontBold")
+        italic := S.Get("GuiFontItalic")
+        strike := S.Get("GuiFontStrike")
+        ul := S.Get("GuiFontUnderline")
+        col := S.Get("GuiFontColour")
+        size := S.Get("GuiFontSize")
+        weight := S.Get("GuiFontWeight")
+        name := S.Get("GuiFontName")
+        bgcol := S.Get("GuiBGColour")
+        this.SetFontOptions(bold, italic, strike, ul, col, size, weight, name, bgcol)
     }
     ;@endregion
 
