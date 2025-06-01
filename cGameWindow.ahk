@@ -60,20 +60,17 @@ Class cGameWindow {
     __New(Title := "", DefW := 0, DefH := 0) {
         If (Title != "") {
             this.Title := Title
+        } Else {
+            Out.E("No title provided to cGameWindow")
         }
         If (DefW != 0) {
             this.DefW := DefW
+        } Else {
+            Out.E("No default width provided to cGameWindow")
         }
         If (DefH != 0) {
             this.DefH := DefH
-        }
-        If (this.Title = "") {
-            Out.E("No title provided to cGameWindow")
-        }
-        If (this.DefW = 0) {
-            Out.E("No default width provided to cGameWindow")
-        }
-        If (this.DefH = 0) {
+        } Else {
             Out.E("No default height provided to cGameWindow")
         }
         this.Exist()

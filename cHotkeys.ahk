@@ -13,31 +13,17 @@ Class cHotkeys {
     IsScriptHotkeys := false
     Hotkeys := Map()
 
-    initHotkeys(secondary := false) {
-        If (!secondary) {
-            If (!FileExist(this.sFilename)) {
-                Out.I("No " this.sFilename " found, writing default file.")
-                this.WriteHotkeyDefaults()
-            }
-            If (this.loadHotkeys()) {
-                Out.I("Loaded " this.sFilename ".")
-            } Else {
-                Return false
-            }
-            Return true
-        } Else {
-            If (this.IsScriptHotkeys) {
-                this.sFilename := A_ScriptDir "\..\ScriptHotkeys.ini"
-            } Else If (this.IsGameHotkeys) {
-                this.sFilename := A_ScriptDir "\..\UserHotkeys.ini"
-            }
-            If (this.loadHotkeys()) {
-                Out.I("Loaded " this.sFilename ".")
-            } Else {
-                Return false
-            }
-            Return true
+    initHotkeys() {
+        If (!FileExist(this.sFilename)) {
+            Out.I("No " this.sFilename " found, writing default file.")
+            this.WriteHotkeyDefaults()
         }
+        If (this.loadHotkeys()) {
+            Out.I("Loaded " this.sFilename ".")
+        } Else {
+            Return false
+        }
+        Return true
     }
 
     loadHotkeys() {

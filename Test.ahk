@@ -24,9 +24,8 @@ Out := cLog(A_ScriptDir "\Test.log", true, 3, false)
 /** @type {cGameWindow} */
 Window := cGameWindow("Notepad.exe", 1278, 664)
 
-S.initSettings()
 S.AddSetting("TestSection", "TestVar", "true, array, test", "Array")
-S.loadSettings()
+S.initSettings()
 
 SArrTest := S.Get("TestVar")[2]
 
