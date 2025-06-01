@@ -3,7 +3,7 @@
 #Include cPoint.ahk
 
 /** @type {cMousePattern} */
-Global MousePattern := cMousePattern()
+;Global MousePattern := cMousePattern()
 
 Class cMousePattern {
     /**

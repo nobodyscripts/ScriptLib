@@ -10,20 +10,19 @@ Global S := cSettings()
 
 /**
  * Single instance of a script setting object
- * @property Name Name of the setting and global var name
+ * @property Name Name of the setting
  * @property DefaultValue Default value for non developers
  * @property Value Value of the setting
  * @property DataType Internal custom datatype string {bool | int | array}
  * @property Category Ini file category heading
  * @method __new Constructor
  * @method ValueToString Converts value to file writable string
- * @method SetCommaDelimStrToArr Set global of this.Name to an array of value
- * split by comma
+ * @method SetCommaDelimStrToArr Set Value to an array of value split by comma
  */
 Class singleSetting {
     ;@region Properties
     /**
-     * Name of the setting and global var name
+     * Name of the setting
      * @type {String} 
      */
     Name := ""
@@ -54,7 +53,7 @@ Class singleSetting {
      * Constructs class and provides object back, has defaults for all except 
      * iName
      * @constructor
-     * @param iName Name of the setting and global var
+     * @param iName Name of the setting
      * @param {Integer} iDefaultValue Default value set in script
      * @param {String} [iDataType="bool"] Internal custom datatype
      * @param {String} [iCategory="Default"] Ini file section heading name
@@ -74,7 +73,7 @@ Class singleSetting {
     ;@region ValueToString()
     /**
      * Convert value to file writable string
-     * @param {Any} value Defaults to getting value of the global variable
+     * @param {Any} value Defaults to getting value of the setting
      * @returns {String | Integer | Any} 
      */
     ValueToIniString(value := this.Value) {
@@ -125,10 +124,10 @@ Class singleSetting {
  * cSettings - Stores settings data
  * @property Filename Full file path to ini file for settings
  * @property Section Ini section heading for settings
- * @property Map Map to store singleSettings objects per global var name
+ * @property Map Map to store singleSettings objects per setting name
  * @method initSettings Load Map with defaults, check if file, load if possible,
  * return loaded state
- * @method loadSettings Load script settings into global vars, runs UpdateSettings
+ * @method loadSettings Load script settings into Map, runs UpdateSettings
  * first to add missing settings rather than reset to defaults if some settings
  * exist
  * @method UpdateSettings Adds missing settings using defaults if some settings 
@@ -154,7 +153,7 @@ Class cSettings {
      */
     Section := "Default"
     /**
-     * Map to store singleSettings objects per global var name
+     * Map to store singleSettings objects per name
      * @type {Map<string, singleSetting>}
      */
     Map := Map()
@@ -228,16 +227,11 @@ Class cSettings {
      * @returns {Boolean} 
      */
     initSettings() {
-        Global Debug
-        ;@region Settings map initialization
-
-        ;@endregion
         If (!FileExist(this.Filename)) {
             Out.I("No UserSettings.ini found, writing default file.")
             this.WriteDefaults()
         }
         If (this.loadSettings()) {
-            Debug := this.Get("Debug")
             Out.UpdateSettings(
                 this.Get("EnableLogging"),
                 this.Get("Verbose"),
@@ -255,15 +249,10 @@ Class cSettings {
 
     ;@region loadSettings()
     /**
-     * Load script settings into global vars, runs UpdateSettings first to add
-     * missing settings rather than reset to defaults if some settings exist
+     * Load script settings into Map, updates missing settings and writes defaults
      * @returns {Boolean} False if error
      */
     loadSettings() {
-        ;@region Globals
-        Global Debug := false
-        ;@endregion
-
         For (setting in this.Map) {
             Try {
                 this.IniToMap(this.Map[setting].Name,

@@ -4,36 +4,19 @@
 #Include cSettings.ahk
 #Include cLogging.ahk
 
-/** @type {Boolean} */
-Global CheckForUpdatesEnable := true
-/** @type {Boolean} */
-Global CheckForUpdatesReleaseOnly := true
-/** @type {DateTime} */
-Global CheckForUpdatesLastCheck := 0
-/**
- * 30 mins in ms, check time (unused)
- * @type {Integer}
- */
-Global CheckForUpdatesInterval := 30 * 60 * 60 * 1000
-/**
- * Limit to check once every 24 hours
- * @type {Integer} "24"
- */
-Global CheckForUpdatesLimiter := 24
+S.AddSetting("Updates", "CheckForUpdatesEnable", true, "bool")
+S.AddSetting("Updates", "CheckForUpdatesReleaseOnly", true, "bool")
+S.AddSetting("Updates", "CheckForUpdatesLastCheck", 0, "int")
+S.AddSetting("Updates", "CheckForUpdatesInterval", 24, "int")
+
 /** Update checking class, checks version against github in a low bandwidth approach
  * @type {UpdateChecker} */
-Global Updater := UpdateChecker()
+;Global Updater := UpdateChecker()
 
-/*
 
-https://api.github.com/repos/<username>/<repository_name>/releases
-https://api.github.com/repos/nobodyscripts/leafblowerscript/releases
-returns json, 0.tag_name = "v3.1.1", 0.url = web link for browser
-
-https://api.github.com/users/nobodyscripts/events/public
-
-*/
-
+/**
+ * Version object for comparison and serialization
+ */
 Class ScriptVersion {
     Raw := ""
     Major := 0
@@ -139,6 +122,7 @@ CompareScriptVersions(obj, obj2, ReleasesOnly) {
     Return 0
 }
 
+
 Class UpdateChecker {
     Enabled := true
     ReleasesOnly := true
@@ -165,23 +149,14 @@ Class UpdateChecker {
      * @returns {Integer} False if settings fail to load
      */
     Init() {
-        Global CheckForUpdatesEnable, CheckForUpdatesReleaseOnly,
-            CheckForUpdatesLastCheck, CheckForUpdatesInterval
-        /** @type {cSettings} */
-        Global S
-
-        If (!S) {
-            S := cSettings()
-
-            If (!S.initSettings()) {
-                Return false
-            }
+        If (!IsSet(S)) {
+            Return false
         }
 
-        this.Enabled := CheckForUpdatesEnable
-        this.ReleasesOnly := CheckForUpdatesReleaseOnly
-        this.LastCheckTime := CheckForUpdatesLastCheck
-        this.CheckInterval := CheckForUpdatesInterval
+        this.Enabled := S.Get("CheckForUpdatesEnable")
+        this.ReleasesOnly := S.Get("CheckForUpdatesReleaseOnly")
+        this.LastCheckTime := S.Get("CheckForUpdatesLastCheck")
+        this.CheckInterval := S.Get("CheckForUpdatesInterval")
         this.localjson := this.GetLocalJson()
         /** @type {ScriptVersion} */
         localVer := ScriptVersion()
@@ -256,29 +231,56 @@ Class UpdateChecker {
     }
 
     isUpdateCheckTimePassed() {
-        Global CheckForUpdatesLastCheck, CheckForUpdatesLimiter
         If (this.LastCheckTime = 0 || DateDiff(this.LastCheckTime, A_Now,
-            "Hours") <= CheckForUpdatesLimiter * -1) {
-            CheckForUpdatesLastCheck := this.LastCheckTime := A_Now
-
-            this.SaveCheckTime()
+            "Hours") <= S.Get("CheckForUpdatesLimiter") * -1) {
+            this.LastCheckTime := A_Now
+            S.Set("CheckForUpdatesLastCheck", this.LastCheckTime)
+            S.SaveCurrentSettings()
             Return true
         }
         Return false
     }
 
-    SaveCheckTime() {
-        Global S
-        S.SaveCurrentSettings()
-    }
-
-    UpdateScriptToNewDev(*) {
-        Download("*0 " this.ZipDownload, "Install.zip")
-
-        DirCopy("Install.zip", A_ScriptDir, 2)
-        DirCopy(A_ScriptDir "\" this.ZipFolder, A_ScriptDir, 2)
-        DirDelete(A_ScriptDir "\" this.ZipFolder, 1)
-        FileDelete(A_ScriptDir "\Install.zip")
+    /**
+     * Update script to new version based on settings in class, suggest close
+     * gui windows during process
+     * @param Dialog Gui window for progress display
+     */
+    UpdateScriptToNewDev(Dialog) {
+        Dialog.Show()
+        Try {
+            If (FileExist("Install.zip")) {
+                FileDelete("Install.zip")
+                Out.I("Removed old Install.zip")
+            }
+            Download(this.ZipDownload, "Install.zip")
+        } Catch Error As uperr {
+            Dialog.Hide()
+            MsgBox("Error occured during update download:`r`n" uperr.Message)
+            Out.E("Install.zip download failed with error.")
+            Out.E(uperr)
+            Reload()
+        }
+        If (!FileExist("Install.zip")) {
+            Dialog.Hide()
+            Out.I("Install.zip failed to download.")
+            MsgBox("Error: Zip failed to download.")
+            Reload()
+        }
+        Try {
+            Out.I("Install.zip downloaded. Unpacking.")
+            DirCopy("Install.zip", A_ScriptDir, 1)
+            DirCopy(A_ScriptDir "\" this.ZipFolder, A_ScriptDir, 2)
+            DirDelete(A_ScriptDir "\" this.ZipFolder, 1)
+            FileDelete(A_ScriptDir "\Install.zip")
+        } Catch Error As unpackerr {
+            Dialog.Hide()
+            MsgBox("Error occured during update:`r`n" unpackerr.Message " " unpackerr.Extra)
+            Out.E("Update failed to extract with error.")
+            Out.E(unpackerr)
+            Reload()
+        }
+        Dialog.Hide()
         MsgBox(this.ScriptName " Update Completed.")
         Reload()
     }

@@ -3,7 +3,7 @@
 #Include cGameWindow.ahk
 
 /** @type {cToolTip} */
-Global gToolTip := cToolTip()
+;Global gToolTip := cToolTip()
 
 /**
  * cTooltip class for displaying aligned tooltips

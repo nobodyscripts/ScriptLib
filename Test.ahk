@@ -26,6 +26,9 @@ Window := cGameWindow("Notepad.exe", 1278, 664)
 
 S.AddSetting("TestSection", "TestVar", "true, array, test", "Array")
 S.initSettings()
+S.Set("EnableLogging", true)
+S.Set("DebugAll", true)
+S.SaveCurrentSettings()
 
 SArrTest := S.Get("TestVar")[2]
 
