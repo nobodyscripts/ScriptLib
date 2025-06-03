@@ -23,6 +23,8 @@
  * @method WaitUntilActiveButtonS
  * @method WaitUntilButton
  * @method WaitUntilButtonS
+ * @method WaitUntilClick
+ * @method WaitUntilClickTwice
  */
 Class cButton extends cPoint {
     /** 0xFFFFFF
@@ -251,4 +253,47 @@ Class cButton extends cPoint {
     WaitUntilButtonS(seconds := 10) {
         Return this.WaitUntilButton(seconds * 1000 / 20, 20)
     }
+
+    ;@region WaitUntilClick()
+    /**
+     * Await active button colour at point for N seconds, then click active
+     * button at point until it is no longer an active button for N seconds
+     * @param [seconds=2] Seconds before time out on waiting for button
+     * @param [clickSeconds=2] Seconds before time out on clicking active button
+     * @param [xOffset=5] Offset for the mouse click position to avoid covering pixel sample
+     * @param [yOffset=5] Offset for the mouse click position to avoid covering pixel sample
+     * @returns {Boolean} False if no button was found
+     */
+    WaitUntilClick(seconds := 2, clickSeconds := 2, xOffset := 5, yOffset := 5) {
+        this.WaitUntilActiveButtonS(seconds)
+        If (!this.IsButtonActive()) {
+            Return false
+        }
+        start := A_Now
+        While (this.IsButtonActive() && DateDiff(A_Now, start, "S") < clickSeconds) {
+            this.ClickButtonActive(xOffset, yOffset)
+        }
+        Return true
+    }
+    ;@endregion
+
+    ;@region WaitUntilClickTwice()
+    /**
+     * Await active button colour at point for N seconds, then click active
+     * button twice for redundancy
+     * @param [seconds=2] Seconds before time out on waiting for button
+     * @param [xOffset=5] Offset for the mouse click position to avoid covering pixel sample
+     * @param [yOffset=5] Offset for the mouse click position to avoid covering pixel sample
+     * @returns {Boolean} False if no button was found
+     */
+    WaitUntilClickTwice(seconds := 2, xOffset := 5, yOffset := 5) {
+        this.WaitUntilActiveButtonS(seconds)
+        If (!this.IsButtonActive()) {
+            Return false
+        }
+        this.ClickButtonActive(xOffset, yOffset)
+        this.ClickButtonActive(xOffset, yOffset)
+        Return true
+    }
+    ;@endregion
 }

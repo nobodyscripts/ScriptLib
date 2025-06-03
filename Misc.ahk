@@ -82,7 +82,7 @@ LineGetColourInstances(x1, y1, x2, y2) {
             Return foundArr
         }
     } Catch As exc {
-        Out.I("Error 9: LineGetColourInstances check failed - " exc.Message)
+        Out.E("LineGetColourInstances check failed - " exc.Message)
         MsgBox("Could not conduct the search due to the following error:`n" exc
             .Message)
     }

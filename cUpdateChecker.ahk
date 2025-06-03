@@ -194,18 +194,18 @@ Class UpdateChecker {
             If (FileExist(this.CurrentJsonFile)) {
                 filecontents := FileRead(this.CurrentJsonFile)
             } Else {
-                Out.I("Error: Version file not found at " this.CurrentJsonFile)
+                Out.E("Version file not found at " this.CurrentJsonFile)
                 MsgBox("Error: Version file not found at " this.CurrentJsonFile)
                 Return false
             }
         } Catch As exc {
-            Out.I("Error: Error opening version file " this.CurrentJsonFile
+            Out.E("Could not open version file " this.CurrentJsonFile
                 " - " exc.Message)
             MsgBox("Error: Error opening version file " this.CurrentJsonFile " - " exc.Message)
             Return false
         }
         If (!filecontents) {
-            Out.I("Error: No version file found in " this.CurrentJsonFile)
+            Out.E("No version file found in " this.CurrentJsonFile)
             Return false
         }
         Return jsongo.Parse(filecontents)
@@ -263,7 +263,7 @@ Class UpdateChecker {
         }
         If (!FileExist("Install.zip")) {
             Dialog.Hide()
-            Out.I("Install.zip failed to download.")
+            Out.E("Install.zip failed to download.")
             MsgBox("Error: Zip failed to download.")
             Reload()
         }
