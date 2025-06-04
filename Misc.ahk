@@ -151,6 +151,36 @@ ArrToCommaDelimStr(var) {
     }
 }
 
+CommaDelimStrToArr(var) {
+    Return StrSplit(var, " ", ",.")
+}
+
+ObjToString(var) {
+    output := Type(var) " {`r`n"
+    For Name , Value in var.OwnProps() {
+        output .= name ": " ObjToString(Value) ",`r`n"
+    }
+    output .= "}"
+
+}
+
+ToStr(var) {
+    switch (Type(var)) {
+        case "String":
+            return var
+        case "Array":
+            return ArrToCommaDelimStr(var)
+        case "Object":
+            return ObjToString(var)
+        case "Integer":
+            return var
+        case "Float":
+            return var
+        default:
+            return ObjToString(var)
+    }
+}
+
 BinToStr(var) {
     If (var) {
         Return "true"

@@ -201,14 +201,19 @@ Class cRect {
             options .= " *H" Height
         }
         options .= " " Filename
-        found := ImageSearch(&OutX, &OutY, this.x1, this.y1, this.x2, this.y2, options)
-        If (found) {
+        Try {
+            found := ImageSearch(&OutX, &OutY, this.x1, this.y1, this.x2, this.y2, options)
+        } Catch Error As OutputVar {
+            Out.E("Image search failed critcally.")
+            Out.E(OutputVar)
+        }
+        If (!found) {
+            Return false
+        } Else {
             Return [
                 OutX,
                 OutY
             ]
-        } Else {
-            Return false
         }
     }
     ;@endregion
