@@ -1,10 +1,10 @@
 {
     "Name": "ScriptLib",
     "Author": "Nobody",
-    "Version": "0.0.5-Alpha",
+    "Version": "0.0.7-Alpha",
     "Major": 0,
     "Minor": 0,
-    "Patch": 6,
+    "Patch": 7,
     "Release": "Alpha",
-    "Build": 12
+    "Build": 13
 }

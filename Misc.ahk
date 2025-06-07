@@ -21,12 +21,24 @@ fCustomClick(clickX, clickY, delay := 34) {
 }
 
 ResetModifierKeys() {
-    ; Cleanup incase still held, ahk cannot tell if the key has been sent as up
-    ; getkeystate reports the key, not what lbr has been given
     If (Window.Exist() && Window.IsActive()) {
         ControlSend("{Control up}", , Window.Title)
         ControlSend("{Alt up}", , Window.Title)
         ControlSend("{Shift up}", , Window.Title)
+    }
+}
+
+SetModifierKeys(ctrl := false, alt := false, shift := false) {
+    If (Window.Exist() && Window.IsActive()) {
+        If (ctrl) {
+            ControlSend("{Control up}", , Window.Title)
+        }
+        If (alt) {
+            ControlSend("{Alt up}", , Window.Title)
+        }
+        If (shift) {
+            ControlSend("{Shift up}", , Window.Title)
+        }
     }
 }
 
@@ -129,6 +141,42 @@ ReloadIfNoGame() {
     }
 }
 
+;@region StartFeatureOrReload()
+/**
+ * Reload if game window is not found, or function has been previously started
+ * @param {Func} callback function to run prior to reload for cleanup
+ */
+StartFeatureOrReload(callback?) {
+    ReloadIfNoGame()
+    Static isRunning := false
+    isRunning := !isRunning
+    If (!isRunning) {
+        If (isset(callback)) {
+            callback()
+        }
+        reload()
+    }
+}
+;@endregion
+
+;@region StartFeatureOrState()
+/**
+ * Reload if game window is not found, or return toggled state
+ * @param {Func} callback
+ * @returns {Boolean} true if not running, false if running
+ */
+StartFeatureOrState() {
+    ReloadIfNoGame()
+    Static isRunning := false
+    isRunning := !isRunning
+    If (!isRunning) {
+        Return false
+    }
+    Return true
+}
+;@endregion
+
+;@region Type functions
 ArrToCommaDelimStr(var) {
     output := ""
     If (Type(var) = "String") {
@@ -157,7 +205,7 @@ CommaDelimStrToArr(var) {
 
 ObjToString(var) {
     output := Type(var) " {`r`n"
-    For Name , Value in var.OwnProps() {
+    For Name, Value in var.OwnProps() {
         output .= name ": " ObjToString(Value) ",`r`n"
     }
     output .= "}"
@@ -165,19 +213,19 @@ ObjToString(var) {
 }
 
 ToStr(var) {
-    switch (Type(var)) {
-        case "String":
-            return var
-        case "Array":
-            return ArrToCommaDelimStr(var)
-        case "Object":
-            return ObjToString(var)
-        case "Integer":
-            return var
-        case "Float":
-            return var
-        default:
-            return ObjToString(var)
+    Switch (Type(var)) {
+    Case "String":
+        Return var
+    Case "Array":
+        Return ArrToCommaDelimStr(var)
+    Case "Object":
+        Return ObjToString(var)
+    Case "Integer":
+        Return var
+    Case "Float":
+        Return var
+    default:
+        Return ObjToString(var)
     }
 }
 
@@ -204,3 +252,44 @@ IsBool(var) {
     }
     Return false
 }
+;@endregion
+
+;@region HexColToDecCol()
+/**
+ * Convert hex colour values to base 10 decimal array
+ * @param colour 0xFFFFFF
+ * @returns {Array} [255,255,255]
+ */
+HexColToDecCol(colour) {
+    returnArr := []
+    first := "0x" SubStr(colour, 3, 2)
+    second := "0x" SubStr(colour, 5, 2)
+    third := "0x" SubStr(colour, 7, 2)
+    first *= 1
+    second *= 1
+    third *= 1
+
+    returnArr.Push(Format("{:d}", first))
+    returnArr.Push(Format("{:d}", second))
+    returnArr.Push(Format("{:d}", third))
+    Return returnArr
+}
+;@endregion
+
+;@region Diff()
+/**
+ * Provide two 0xFFFFFF formatted colours and return a difference between them
+ * @param cOne 0xFFFFFF
+ * @param cTwo 0xFFFFFF
+ * @returns {Float} Numeric difference between the two colours
+ */
+ColourDiff(cOne, cTwo) {
+    one := HexColToDecCol(cOne)
+    two := HexColToDecCol(cTwo)
+    red := (one[1] - two[1]) * (one[1] - two[1])
+    blue := (one[2] - two[2]) * (one[2] - two[2])
+    green := (one[3] - two[3]) * (one[3] - two[3])
+    Out.D("Diffing Colours: " cOne " " cTwo " " Sqrt(red + blue + green))
+    Return Sqrt(red + blue + green)
+}
+;@endregion

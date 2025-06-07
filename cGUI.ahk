@@ -95,6 +95,7 @@ Class cGui extends GUI {
             Title := Trim(Title)
         }
         S.AddSetting("GUIPosition", Title, "0,0", "string")
+        S.initSettings()
         Try {
             arr := S.IniToVar(Title, "GUIPosition")
         } Catch Error As OutputVar {
@@ -356,5 +357,4 @@ Class cGui extends GUI {
         }
     }
     ;@endregion
-
 }
