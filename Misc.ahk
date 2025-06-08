@@ -3,7 +3,6 @@
 #Include cLogging.ahk
 #Include cGameWindow.ahk
 #Include cPoint.ahk
-#Include cToolTip.ahk
 #Include cRect.ahk
 
 ; ------------------- Functions -------------------
@@ -31,13 +30,13 @@ ResetModifierKeys() {
 SetModifierKeys(ctrl := false, alt := false, shift := false) {
     If (Window.Exist() && Window.IsActive()) {
         If (ctrl) {
-            ControlSend("{Control up}", , Window.Title)
+            ControlSend("{Control down}", , Window.Title)
         }
         If (alt) {
-            ControlSend("{Alt up}", , Window.Title)
+            ControlSend("{Alt down}", , Window.Title)
         }
         If (shift) {
-            ControlSend("{Shift up}", , Window.Title)
+            ControlSend("{Shift down}", , Window.Title)
         }
     }
 }
@@ -134,47 +133,6 @@ LineGetColourInstancesOffsetV(x, y1, y2, colour, splitCount := 20) {
     Return false
 }
 
-ReloadIfNoGame() {
-    If (!Window.Exist() || !Window.IsActive()) {
-        Reload() ; Kill if no game
-        Return
-    }
-}
-
-;@region StartFeatureOrReload()
-/**
- * Reload if game window is not found, or function has been previously started
- * @param {Func} callback function to run prior to reload for cleanup
- */
-StartFeatureOrReload(callback?) {
-    ReloadIfNoGame()
-    Static isRunning := false
-    isRunning := !isRunning
-    If (!isRunning) {
-        If (isset(callback)) {
-            callback()
-        }
-        reload()
-    }
-}
-;@endregion
-
-;@region StartFeatureOrState()
-/**
- * Reload if game window is not found, or return toggled state
- * @param {Func} callback
- * @returns {Boolean} true if not running, false if running
- */
-StartFeatureOrState() {
-    ReloadIfNoGame()
-    Static isRunning := false
-    isRunning := !isRunning
-    If (!isRunning) {
-        Return false
-    }
-    Return true
-}
-;@endregion
 
 ;@region Type functions
 ArrToCommaDelimStr(var) {

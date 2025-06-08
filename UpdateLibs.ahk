@@ -15,25 +15,37 @@ UpdateLibs()
 ;@region UpdateLibs()
 UpdateLibs(*) {
     Try {
-        HasPressed := MsgBox("Update all scriptlib folders?",
+        UpdateFolders := ["..\LeafBlowerScript\ScriptLib",
+            "..\LBRSaveManager\ScriptLib",
+            "..\wizardswheel2script\ScriptLib",
+            "..\WW2SaveManager\ScriptLib",
+            "..\MacroCreator\ScriptLib"]
+        msg := ""
+        For (folder in UpdateFolders) {
+            targetDir := A_ScriptDir "\" folder
+            If (DirExist(targetDir)) {
+                msg .= "Copying base lib files to " targetDir "`r`n"
+                msg .= "Copying ext lib files to " targetDir "\ExtLibs`r`n"
+            }
+        }
+        HasPressed := MsgBox("Update all scriptlib folders?`r`n" msg,
             "Update folders?", "0x1 0x100 0x10")
         If (HasPressed = "OK") {
-            UpdateFolders := ["..\LeafBlowerScript\ScriptLib",
-                "..\LBRSaveManager\ScriptLib",
-                "..\wizardswheel2script\ScriptLib",
-                "..\WW2SaveManager\ScriptLib",
-                "..\MacroCreator\ScriptLib"]
             For (folder in UpdateFolders) {
-                If (DirExist(folder)) {
+                targetDir := A_ScriptDir "\" folder
+                If (DirExist(targetDir)) {
                     ; Wipe any file first
-                    DirDelete(A_ScriptDir "\" folder, 1)
-                    DirCreate(A_ScriptDir "\" folder)
+                    Out.I("Deleting " targetDir)
+                    DirDelete(targetDir, 1)
+                    DirCreate(targetDir)
 
-                    FileCopy(A_ScriptDir "\*.ahk", A_ScriptDir "\" folder, 1)
-                    FileCopy(A_ScriptDir "\*.md", A_ScriptDir "\" folder, 1)
-                    FileCopy(A_ScriptDir "\*.json", A_ScriptDir "\" folder, 1)
-                    
-                    DirCopy(A_ScriptDir "\ExtLibs", A_ScriptDir "\" folder "\ExtLibs", 1)
+                    Out.I("Copying base lib files to " targetDir)
+                    FileCopy(A_ScriptDir "\*.ahk", targetDir, 1)
+                    FileCopy(A_ScriptDir "\*.md", targetDir, 1)
+                    FileCopy(A_ScriptDir "\*.json", targetDir, 1)
+
+                    Out.I("Copying ext lib files to " targetDir "\ExtLibs")
+                    DirCopy(A_ScriptDir "\ExtLibs", targetDir "\ExtLibs", 1)
                 }
             }
         }

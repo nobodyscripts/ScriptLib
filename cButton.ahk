@@ -170,7 +170,7 @@ Class cButton extends cPoint {
      * @param {Integer} [yOffset] Amount to offset Y when clicking to avoid 
      * covering point
      * @param {Integer} [clickdelay=34] Delay for mouseclick
-     * @param {Integer} [sleepafter=Navigatetime] Period to sleep after clicking
+     * @param {Integer} [sleepafter=17] Period to sleep after clicking
      * @returns {Boolean} Was button active and clicked
      */
     ClickButtonActive(xOffset := 1, yOffset := 1, clickdelay := 34,

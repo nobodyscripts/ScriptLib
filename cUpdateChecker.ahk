@@ -232,7 +232,7 @@ Class UpdateChecker {
 
     isUpdateCheckTimePassed() {
         If (this.LastCheckTime = 0 || DateDiff(this.LastCheckTime, A_Now,
-            "Hours") <= S.Get("CheckForUpdatesLimiter") * -1) {
+            "Hours") <= S.Get("CheckForUpdatesInterval") * -1) {
             this.LastCheckTime := A_Now
             S.Set("CheckForUpdatesLastCheck", this.LastCheckTime)
             S.SaveCurrentSettings()

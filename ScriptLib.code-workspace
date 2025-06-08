@@ -30,7 +30,26 @@
 				},
 				"useDebugDirective": false,
 				"useAutoJumpToError": true,
-				"stopOnEntry": false
+				"stopOnEntry": false,
+				"port": "9002-9010"
+			},
+			{
+				"name": "ScriptLib UpdateLibs",
+				"type": "autohotkey",
+				"request": "launch",
+				"program": "${workspaceFolder}/UpdateLibs.ahk",
+				"args": [
+					"/ErrorStdOut=UTF-8"
+				],
+				"variableCategories": "recommend",
+				"usePerfTips": {
+					"fontColor": "red",
+					"format": "{{elapsedTime_ms}} ms {{hitCount}} hit"
+				},
+				"useDebugDirective": false,
+				"useAutoJumpToError": true,
+				"stopOnEntry": false,
+				"port": "9002-9010"
 			}
 		],
 		"compounds": []

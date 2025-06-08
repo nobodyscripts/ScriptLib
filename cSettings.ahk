@@ -200,6 +200,10 @@ Class cSettings {
      * Get value by setting name
      */
     Get(Name) {
+        if(!this.IsSetting(Name)) {
+            Out.E("Setting " Name " was not initialised so cannot be read")
+            Throw Error("Setting " Name " was not initialised so cannot be read")
+        }
         Return this.Map[Name].Value
     }
     ;@endregion
@@ -209,6 +213,10 @@ Class cSettings {
      * Get value by setting name
      */
     Set(Name, value) {
+        if(!this.IsSetting(Name)) {
+            Out.E("Setting " Name " was not initialised so cannot be set to " value)
+            Throw Error("Setting " Name " was not initialised so cannot be set to " value)
+        }
         this.Map[Name].Value := value
     }
     ;@endregion
@@ -218,6 +226,10 @@ Class cSettings {
      * Get default value by setting name
      */
     GetDefault(Name) {
+        if(!this.IsSetting(Name)) {
+            Out.E("Setting " Name " was not initialised so cannot read default")
+            Throw Error("Setting " Name " was not initialised so cannot read default")
+        }
         Return this.Map[Name].DefaultValue
     }
     ;@endregion
@@ -227,6 +239,10 @@ Class cSettings {
      * Set value to default by setting name
      */
     SetDefault(Name) {
+        if(!this.IsSetting(Name)) {
+            Out.E("Setting " Name " was not initialised so cannot set default")
+            Throw Error("Setting " Name " was not initialised so cannot set default")
+        }
         Return this.Map[Name].Value := this.Map[Name].DefaultValue
     }
     ;@endregion
