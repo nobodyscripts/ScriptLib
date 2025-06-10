@@ -9,10 +9,11 @@ S.AddSetting("Updates", "CheckForUpdatesReleaseOnly", true, "bool")
 S.AddSetting("Updates", "CheckForUpdatesLastCheck", 0, "int")
 S.AddSetting("Updates", "CheckForUpdatesInterval", 24, "int")
 
-/** Update checking class, checks version against github in a low bandwidth approach
- * @type {UpdateChecker} */
-;Global Updater := UpdateChecker()
-
+If (!IsSet(Updater)) {
+    /** Update checking class, checks version against github in a low bandwidth approach
+     * @type {UpdateChecker} */
+    Global Updater := UpdateChecker()
+}
 
 /**
  * Version object for comparison and serialization
@@ -121,7 +122,6 @@ CompareScriptVersions(obj, obj2, ReleasesOnly) {
     }
     Return 0
 }
-
 
 Class UpdateChecker {
     Enabled := true

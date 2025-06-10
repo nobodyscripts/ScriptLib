@@ -1,6 +1,11 @@
 #Requires AutoHotkey v2.0
 
-Global Out
+If (!IsSet(Out)) {
+    /**
+     * Out cLog class global
+     * @type {cLog} */
+    Global Out := cLog()
+}
 
 /**
  * Log class to handle file open buffer and logging

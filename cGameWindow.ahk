@@ -2,11 +2,12 @@
 
 #Include cTimer.ahk
 
-/**
- * Game window class global
- * @type {cGameWindow} 
- */
-Global Window
+If (!IsSet(Window)) {
+    /**
+     * Game window class global
+     * @type {cGameWindow} */
+    Global Window := cGameWindow()
+}
 
 /**
  * Game Window management class resolution independant
@@ -236,6 +237,18 @@ Class cGameWindow {
             Return false
         }
         Return true
+    }
+    ;@endregion
+
+    ;@region StartOrExit()
+    /**
+     * Exit script if window doesn't exist and isn't made active
+     */
+    StartOrExit() {
+        If (!this.Activate()) {
+            ExitApp()
+            Sleep(5000)
+        }
     }
     ;@endregion
 }

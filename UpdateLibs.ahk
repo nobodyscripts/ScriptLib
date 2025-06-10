@@ -2,11 +2,11 @@
 #MaxThreadsPerHotkey 8
 #SingleInstance Force
 
-#Include cLogging.ahk
-#Include cSettings.ahk
-
 /** @type {cLog} */
 Out := cLog(A_ScriptDir "\Secondaries.log", true, 3, false)
+
+#Include cLogging.ahk
+#Include cSettings.ahk
 
 S.initSettings()
 
